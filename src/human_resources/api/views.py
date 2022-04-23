@@ -97,7 +97,66 @@ def get_parent_status(request):
         else:
             return Response(Returns.NOT_INSERTED)
     parent = _mod.ParentStatus.objects.all()
-    serializer = _ser.ParentStatusSerializer(parent, may=True)
+    serializer = _ser.ParentStatusSerializer(parent, many=True)
     if serializer.data:
         return Response(Returns.object(serializer.data))
     
+    
+@api_view(['GET'])
+def get_students(request):
+    students = _mod.Students.objects.all()
+    serializer = _ser.StudentSerializer(students, many=True)
+    if serializer.data:
+        return Response(Returns.object(serializer.data))
+    else:
+        return Response(Returns.NULL)
+    
+    
+@api_view(['POST'])
+def add_student(request):
+    serializer = _ser.StudentSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+def get_current_student(request):
+    id = request.query_params.get('id', None)
+    student = _mod.Students.objects.get(id=id)
+    serializer = _ser.StudentSerializer(student)
+    if serializer.data:
+        return Response(Returns.object(serializer.data))
+    else:
+        return Response(Returns.STUDENT_NOT_FOUND)
+
+
+@api_view(['PUT'])
+def update_student(request):
+    id = request.query_params.get('id', None)
+    req = request.data
+    student = _mod.Students.objects.get(id=id)
+    print(req)
+    serializer = _ser.StudentSerializer(
+        instance=student, 
+        data = {
+            "name"                  : req["name"],
+            "surname"               : req["surname"],
+            "father_name"           : req["father_name"],
+            "identification_number" : req["identification_number"],
+            "course_id"             : req["course_id"],
+            "faculty_id"            : req["faculty_id"],
+            "klass"                 : req["klass"],
+        }
+    )
+    if serializer.is_valid():
+        serializer.save()
+    return Response(Returns.UPDATED)
+
+
+@api_view(['DELETE'])
+def delete_student(request):
+    id = request.query_params.get('id', None)
+    student = _mod.Students.objects.get(id=id)
+    student.delete()
+    return Response(Returns.DELETED)
